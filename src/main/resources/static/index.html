@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SharkStore — Apex Tech & Gear</title>
+  <link rel="manifest" href="/manifest.json" />
+  <style>
+    :root {
+      --bg-deep: #061428;
+      --bg-card: #0c1f3d;
+      --bg-elevated: #11294f;
+      --cobalt: #0ea5e9;
+      --cobalt-dark: #2563eb;
+      --red-accent: #ef4444;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: rgba(14, 165, 233, 0.22);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+    body { background: var(--bg-deep); color: var(--text-main); min-height: 100vh; }
+    header {
+      background: rgba(6, 20, 40, 0.92); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50;
+      padding: 0.9rem 2rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    }
+    .brand { display: flex; align-items: center; gap: 0.65rem; font-size: 1.4rem; font-weight: 800; letter-spacing: 0.5px; }
+    .brand span { color: var(--cobalt); }
+    .brand-badge { background: var(--red-accent); font-size: 0.7rem; padding: 0.15rem 0.45rem; border-radius: 4px; text-transform: uppercase; }
+    .search-bar { flex: 1; max-width: 420px; display: flex; gap: 0.5rem; }
+    input, select, textarea {
+      background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text-main);
+      padding: 0.55rem 0.85rem; border-radius: 8px; outline: none; width: 100%;
+    }
+    input:focus, select:focus { border-color: var(--cobalt); }
+    button {
+      background: linear-gradient(135deg, var(--cobalt), var(--cobalt-dark)); color: #fff;
+      border: none; padding: 0.55rem 1rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s;
+    }
+    button:hover { opacity: 0.92; transform: translateY(-1px); }
+    button.secondary { background: var(--bg-elevated); border: 1px solid var(--border); }
+    button.danger { background: var(--red-accent); }
+    .nav-actions { display: flex; align-items: center; gap: 0.65rem; flex-wrap: wrap; }
+    .pill { background: var(--bg-elevated); border: 1px solid var(--border); padding: 0.35rem 0.75rem; border-radius: 999px; font-size: 0.85rem; }
+    main { max-width: 1240px; margin: 0 auto; padding: 1.75rem; }
+    .hero {
+      background: linear-gradient(135deg, #0b2244 0%, #071730 60%, #1e1b4b 100%);
+      border: 1px solid var(--border); border-radius: 16px; padding: 2rem; margin-bottom: 1.75rem;
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
+    }
+    .hero h1 { font-size: 2rem; margin-bottom: 0.4rem; }
+    .hero p { color: var(--text-muted); max-width: 600px; }
+    .filters { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .filters button.active { background: var(--red-accent); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 1.25rem; }
+    .card {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden;
+      display: flex; flex-direction: column; transition: transform 0.2s, border-color 0.2s;
+    }
+    .card:hover { transform: translateY(-4px); border-color: var(--cobalt); }
+    .card img { width: 100%; height: 185px; object-fit: cover; background: #081830; }
+    .card-body { padding: 1.1rem; display: flex; flex-direction: column; flex: 1; gap: 0.5rem; }
+    .card-meta { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--cobalt); font-weight: 600; }
+    .card-title { font-size: 1.08rem; font-weight: 700; }
+    .card-desc { font-size: 0.86rem; color: var(--text-muted); flex: 1; }
+    .card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 0.6rem; padding-top: 0.75rem; border-top: 1px solid var(--border); }
+    .price { font-size: 1.2rem; font-weight: 800; color: #38bdf8; }
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(2, 8, 20, 0.78); display: none;
+      align-items: center; justify-content: center; z-index: 100; padding: 1rem;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+      width: 100%; max-width: 520px; max-height: 88vh; overflow-y: auto; padding: 1.5rem;
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .form-group { margin-bottom: 0.85rem; }
+    .form-group label { display: block; font-size: 0.84rem; color: var(--text-muted); margin-bottom: 0.3rem; }
+    .cart-row, .order-card {
+      background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px;
+      padding: 0.85rem; margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center; gap: 0.75rem;
+    }
+    .order-card { flex-direction: column; align-items: stretch; }
+    .demo-creds { font-size: 0.8rem; color: var(--text-muted); background: var(--bg-elevated); padding: 0.65rem; border-radius: 8px; margin-top: 0.75rem; line-height: 1.5; }
+    .toast {
+      position: fixed; bottom: 1.25rem; right: 1.25rem; background: var(--cobalt-dark); color: #fff;
+      padding: 0.75rem 1.15rem; border-radius: 10px; font-weight: 600; display: none; z-index: 200;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">🦈 Shark<span>Store</span> <span class="brand-badge">Pro</span></div>
+    <div class="search-bar">
+      <input id="searchInput" type="text" placeholder="Search gear, audio, electronics..." onkeyup="if(event.key==='Enter') loadProducts()" />
+      <button onclick="loadProducts()">Search</button>
+    </div>
+    <div class="nav-actions">
+      <span id="userBadge" class="pill">Guest</span>
+      <button id="cartBtn" class="secondary" onclick="openCart()">Cart (<span id="cartCount">0</span>)</button>
+      <button id="ordersBtn" class="secondary" style="display:none" onclick="openOrders()">Orders</button>
+      <button id="studioBtn" class="secondary" style="display:none" onclick="openStudio()">Seller / Admin</button>
+      <button id="authBtn" onclick="openAuth()">Sign In</button>
+      <button id="logoutBtn" class="danger" style="display:none" onclick="logout()">Logout</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <h1>Enterprise Gear. Apex Precision.</h1>
+        <p>Full-stack Spring Boot + JWT storefront with live inventory locking, role-based vendor studio, and instant checkout.</p>
+      </div>
+      <div style="display:flex; gap:0.6rem;">
+        <a id="swaggerLink" href="/swagger-ui.html" target="_blank"><button class="secondary">OpenAPI Docs</button></a>
+        <a id="h2Link" href="/h2-console" target="_blank"><button class="secondary">H2 Console</button></a>
+      </div>
+    </section>
+
+    <div class="filters" id="categoryFilters">
+      <button class="active" onclick="filterCategory('ALL', this)">All Gear</button>
+      <button class="secondary" onclick="filterCategory('Electronics', this)">Electronics</button>
+      <button class="secondary" onclick="filterCategory('Audio', this)">Audio</button>
+      <button class="secondary" onclick="filterCategory('Gear', this)">Gear</button>
+      <button class="secondary" onclick="filterCategory('Lifestyle', this)">Lifestyle</button>
+    </div>
+
+    <div class="grid" id="productGrid"></div>
+  </main>
+
+  <!-- Auth Modal -->
+  <div class="modal-backdrop" id="authModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="authTitle">Sign In to SharkStore</h3>
+        <button class="secondary" onclick="closeModal('authModal')">✕</button>
+      </div>
+      <div id="registerFields" style="display:none">
+        <div class="form-group"><label>Full Name</label><input id="regName" placeholder="Alex Mercer" /></div>
+        <div class="form-group">
+          <label>Account Role</label>
+          <select id="regRole" onchange="document.getElementById('storeField').style.display = this.value==='SELLER'?'block':'none'">
+            <option value="CUSTOMER">Customer</option>
+            <option value="SELLER">Seller / Vendor</option>
+          </select>
+        </div>
+        <div class="form-group" id="storeField" style="display:none"><label>Store Name</label><input id="regStore" placeholder="Cobalt Labs" /></div>
+      </div>
+      <div class="form-group"><label>Email</label><input id="authEmail" type="email" value="customer@sharkstore.com" /></div>
+      <div class="form-group"><label>Password</label><input id="authPassword" type="password" value="customer123" /></div>
+      <button style="width:100%" onclick="submitAuth()">Continue</button>
+      <p style="text-align:center; margin-top:0.8rem; font-size:0.85rem;">
+        <a href="#" style="color:var(--cobalt)" onclick="toggleAuthMode(); return false;" id="toggleAuthText">Need an account? Register</a>
+      </p>
+      <div class="demo-creds">
+        <strong>Demo Accounts:</strong><br/>
+        Customer: <code>customer@sharkstore.com</code> / <code>customer123</code><br/>
+        Seller: <code>seller@sharkstore.com</code> / <code>seller123</code><br/>
+        Admin: <code>admin@sharkstore.com</code> / <code>admin123</code>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cart Modal -->
+  <div class="modal-backdrop" id="cartModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Your Shopping Cart</h3>
+        <button class="secondary" onclick="closeModal('cartModal')">✕</button>
+      </div>
+      <div id="cartItemsContainer"></div>
+      <div class="form-group" style="margin-top:1rem;">
+        <label>Shipping Address</label>
+        <input id="shippingAddress" value="100 Razor Cobalt Ave, Ocean Tech Park" />
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem;">
+        <strong id="cartTotal" style="font-size:1.15rem;">Total: $0.00</strong>
+        <button onclick="checkout()">Complete Checkout</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Orders Modal -->
+  <div class="modal-backdrop" id="ordersModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Order History</h3>
+        <button class="secondary" onclick="closeModal('ordersModal')">✕</button>
+      </div>
+      <div id="ordersContainer"></div>
+    </div>
+  </div>
+
+  <!-- Seller / Admin Studio Modal -->
+  <div class="modal-backdrop" id="studioModal">
+    <div class="modal" style="max-width:640px">
+      <div class="modal-header">
+        <h3>Vendor & Admin Studio</h3>
+        <button class="secondary" onclick="closeModal('studioModal')">✕</button>
+      </div>
+      <div id="adminMetrics" style="margin-bottom:1rem;"></div>
+      <h4 style="margin-bottom:0.6rem;">Publish New Product</h4>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.6rem;">
+        <input id="pName" placeholder="Product Name" />
+        <input id="pCategory" placeholder="Category (Electronics, Audio...)" value="Electronics" />
+        <input id="pPrice" type="number" step="0.01" placeholder="Price ($)" />
+        <input id="pStock" type="number" placeholder="Stock Quantity" />
+      </div>
+      <input id="pImage" placeholder="Image URL" style="margin-top:0.6rem;" value="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80" />
+      <input id="pDesc" placeholder="Short Description" style="margin-top:0.6rem;" />
+      <button style="margin-top:0.75rem; width:100%;" onclick="createProduct()">Add Product to Catalog</button>
+      <h4 style="margin:1.2rem 0 0.6rem;">Managed Inventory</h4>
+      <div id="sellerProductsContainer"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // Replace 'https://sharkstore-api.onrender.com' with your actual Render backend URL after deploying
+    const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+      ? ''
+      : 'https://sharkstore-api.onrender.com';
+
+    if (API_BASE) {
+      document.getElementById('swaggerLink').href = API_BASE + '/swagger-ui.html';
+      document.getElementById('h2Link').href = API_BASE + '/h2-console';
+    }
+
+    let token = localStorage.getItem('shark_token') || '';
+    let currentUser = JSON.parse(localStorage.getItem('shark_user') || 'null');
+    let activeCategory = 'ALL';
+    let isRegister = false;
+
+    function toast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.style.display = 'block';
+      setTimeout(() => el.style.display = 'none', 3000);
+    }
+
+    function authHeaders() {
+      return token ? { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token } : { 'Content-Type': 'application/json' };
+    }
+
+    function updateNav() {
+      const loggedIn = !!currentUser;
+      document.getElementById('userBadge').textContent = loggedIn ? `${currentUser.fullName} (${currentUser.role})` : 'Guest';
+      document.getElementById('authBtn').style.display = loggedIn ? 'none' : 'inline-block';
+      document.getElementById('logoutBtn').style.display = loggedIn ? 'inline-block' : 'none';
+      document.getElementById('ordersBtn').style.display = loggedIn ? 'inline-block' : 'none';
+      document.getElementById('studioBtn').style.display = (loggedIn && (currentUser.role === 'SELLER' || currentUser.role === 'ADMIN')) ? 'inline-block' : 'none';
+      if (loggedIn) loadCart(); else document.getElementById('cartCount').textContent = '0';
+    }
+
+    function openModal(id) { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+    function openAuth() { openModal('authModal'); }
+
+    function toggleAuthMode() {
+      isRegister = !isRegister;
+      document.getElementById('registerFields').style.display = isRegister ? 'block' : 'none';
+      document.getElementById('authTitle').textContent = isRegister ? 'Create SharkStore Account' : 'Sign In to SharkStore';
+      document.getElementById('toggleAuthText').textContent = isRegister ? 'Already have an account? Sign In' : 'Need an account? Register';
+    }
+
+    async function submitAuth() {
+      const url = isRegister ? '/api/auth/register' : '/api/auth/login';
+      const body = isRegister ? {
+        fullName: document.getElementById('regName').value,
+        email: document.getElementById('authEmail').value,
+        password: document.getElementById('authPassword').value,
+        role: document.getElementById('regRole').value,
+        storeName: document.getElementById('regStore').value
+      } : {
+        email: document.getElementById('authEmail').value,
+        password: document.getElementById('authPassword').value
+      };
+
+      const res = await fetch(API_BASE + url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const data = await res.json();
+      if (!res.ok) return toast(data.error || 'Authentication failed');
+
+      token = data.token;
+      currentUser = data.user;
+      localStorage.setItem('shark_token', token);
+      localStorage.setItem('shark_user', JSON.stringify(currentUser));
+      closeModal('authModal');
+      updateNav();
+      toast('Welcome, ' + currentUser.fullName + '!');
+    }
+
+    function logout() {
+      token = ''; currentUser = null;
+      localStorage.removeItem('shark_token');
+      localStorage.removeItem('shark_user');
+      updateNav();
+      toast('Signed out.');
+    }
+
+    function filterCategory(cat, btn) {
+      activeCategory = cat;
+      document.querySelectorAll('#categoryFilters button').forEach(b => b.className = 'secondary');
+      btn.className = 'active';
+      loadProducts();
+    }
+
+    async function loadProducts() {
+      const q = document.getElementById('searchInput').value.trim();
+      const params = new URLSearchParams();
+      if (q) params.append('q', q);
+      else if (activeCategory !== 'ALL') params.append('category', activeCategory);
+
+      const res = await fetch(API_BASE + '/api/products?' + params.toString());
+      const products = await res.json();
+      const grid = document.getElementById('productGrid');
+      grid.innerHTML = products.map(p => `
+        <div class="card">
+          <img src="${p.imageUrl || ''}" alt="${p.name}" />
+          <div class="card-body">
+            <div class="card-meta"><span>${p.category}</span><span>${p.stockQuantity} in stock</span></div>
+            <div class="card-title">${p.name}</div>
+            <div class="card-desc">${p.description || ''}</div>
+            <div class="card-footer">
+              <span class="price">$${Number(p.price).toFixed(2)}</span>
+              <button ${p.stockQuantity <= 0 ? 'disabled' : ''} onclick="addToCart(${p.id})">
+                ${p.stockQuantity > 0 ? 'Add to Cart' : 'Sold Out'}
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function addToCart(productId) {
+      if (!currentUser) { openAuth(); return toast('Please sign in to add items to your cart.'); }
+      const res = await fetch(API_BASE + '/api/cart/add', {
+        method: 'POST', headers: authHeaders(), body: JSON.stringify({ productId, quantity: 1 })
+      });
+      const data = await res.json();
+      if (!res.ok) return toast(data.error || 'Could not add item');
+      renderCart(data);
+      toast('Added to cart!');
+    }
+
+    async function loadCart() {
+      if (!currentUser) return;
+      const res = await fetch(API_BASE + '/api/cart', { headers: authHeaders() });
+      if (res.ok) renderCart(await res.json());
+    }
+
+    function renderCart(items) {
+      const count = items.reduce((sum, i) => sum + i.quantity, 0);
+      document.getElementById('cartCount').textContent = count;
+      let total = 0;
+      document.getElementById('cartItemsContainer').innerHTML = items.length ? items.map(i => {
+        const line = Number(i.product.price) * i.quantity;
+        total += line;
+        return `
+          <div class="cart-row">
+            <div>
+              <strong>${i.product.name}</strong><br/>
+              <small style="color:var(--text-muted)">$${Number(i.product.price).toFixed(2)} × ${i.quantity}</small>
+            </div>
+            <div style="display:flex; gap:0.35rem; align-items:center;">
+              <button class="secondary" onclick="updateCartItem(${i.id}, ${i.quantity - 1})">-</button>
+              <span>${i.quantity}</span>
+              <button class="secondary" onclick="updateCartItem(${i.id}, ${i.quantity + 1})">+</button>
+            </div>
+          </div>
+        `;
+      }).join('') : '<p style="color:var(--text-muted)">Your cart is empty.</p>';
+      document.getElementById('cartTotal').textContent = 'Total: $' + total.toFixed(2);
+    }
+
+    async function updateCartItem(itemId, quantity) {
+      const res = await fetch(API_BASE + '/api/cart/' + itemId, {
+        method: 'PUT', headers: authHeaders(), body: JSON.stringify({ quantity })
+      });
+      if (res.ok) renderCart(await res.json());
+    }
+
+    function openCart() {
+      if (!currentUser) return openAuth();
+      loadCart();
+      openModal('cartModal');
+    }
+
+    async function checkout() {
+      const shippingAddress = document.getElementById('shippingAddress').value;
+      const res = await fetch(API_BASE + '/api/orders/checkout', {
+        method: 'POST', headers: authHeaders(), body: JSON.stringify({ shippingAddress })
+      });
+      const data = await res.json();
+      if (!res.ok) return toast(data.error || 'Checkout failed');
+      closeModal('cartModal');
+      loadCart();
+      loadProducts();
+      toast('Order ' + data.orderNumber + ' confirmed!');
+    }
+
+  async function openOrders() {
+      const res = await fetch(API_BASE + '/api/orders', { headers: authHeaders() });
+      const orders = await res.json();
+      document.getElementById('ordersContainer').innerHTML = orders.length ? orders.map(o => `
+        <div class="order-card">
+          <div style="display:flex; justify-content:space-between;">
+            <strong>${o.orderNumber}</strong>
+            <span class="pill">${o.status}</span>
+          </div>
+          <small style="color:var(--text-muted)">Ship to: ${o.shippingAddress}</small>
+          <div style="font-size:0.88rem;">${o.items.map(it => `${it.product.name} (×${it.quantity})`).join(', ')}</div>
+          <strong style="color:#38bdf8;">Total: $${Number(o.totalAmount).toFixed(2)}</strong>
+        </div>
+      `).join('') : '<p style="color:var(--text-muted)">No orders yet.</p>';
+      openModal('ordersModal');
+    }
+
+    async function openStudio() {
+      openModal('studioModal');
+      if (currentUser.role === 'ADMIN') {
+        const res = await fetch(API_BASE + '/api/admin/overview', { headers: authHeaders() });
+        if (res.ok) {
+          const m = await res.json();
+          document.getElementById('adminMetrics').innerHTML = `
+            <div class="cart-row">
+              <span>Users: <strong>${m.totalUsers}</strong></span>
+              <span>Products: <strong>${m.totalProducts}</strong></span>
+              <span>Orders: <strong>${m.totalOrders}</strong></span>
+              <span>Revenue: <strong>$${Number(m.grossRevenue).toFixed(2)}</strong></span>
+            </div>
+          `;
+        }
+      } else {
+        document.getElementById('adminMetrics').innerHTML = '';
+      }
+      loadSellerProducts();
+    }
+
+    async function loadSellerProducts() {
+      const res = await fetch(API_BASE + '/api/seller/products', { headers: authHeaders() });
+      const list = await res.json();
+      document.getElementById('sellerProductsContainer').innerHTML = list.map(p => `
+        <div class="cart-row">
+          <div><strong>${p.name}</strong><br/><small style="color:var(--text-muted)">$${Number(p.price).toFixed(2)} • Stock: ${p.stockQuantity}</small></div>
+          <button class="danger" onclick="deleteProduct(${p.id})">Delete</button>
+        </div>
+      `).join('');
+    }
+
+    async function createProduct() {
+      const body = {
+        name: document.getElementById('pName').value,
+        category: document.getElementById('pCategory').value,
+        price: document.getElementById('pPrice').value,
+        stockQuantity: document.getElementById('pStock').value,
+        imageUrl: document.getElementById('pImage').value,
+        description: document.getElementById('pDesc').value
+      };
+      const res = await fetch(API_BASE + '/api/seller/products', { method: 'POST', headers: authHeaders(), body: JSON.stringify(body) });
+      if (res.ok) {
+        toast('Product published!');
+        loadSellerProducts();
+        loadProducts();
+      }
+    }
+
+    async function deleteProduct(id) {
+      const res = await fetch(API_BASE + '/api/seller/products/' + id, { method: 'DELETE', headers: authHeaders() });
+      if (res.ok) {
+        toast('Product removed');
+        loadSellerProducts();
+        loadProducts();
+      }
+    }
+
+    updateNav();
+    loadProducts();
+  </script>
+</body>
+</html>
